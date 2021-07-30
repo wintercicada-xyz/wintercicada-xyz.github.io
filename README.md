@@ -1,1 +1,1 @@
-File for my [website](https://wintercicada-xyz.github.io/)
+File for my [blog](https://wintercicada-xyz.github.io/)
