@@ -5,16 +5,6 @@
     <link>http://localhost:1313/</link>
     <description>Recent content on WinterCicada</description>
     <generator>Hugo -- gohugo.io</generator>
-    <language>en</language>
-    <lastBuildDate>Sat, 31 Jul 2021 12:37:37 +0800</lastBuildDate><atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>搜索技巧</title>
-      <link>http://localhost:1313/post/search-skills/</link>
-      <pubDate>Sat, 31 Jul 2021 12:37:37 +0800</pubDate>
-      
-      <guid>http://localhost:1313/post/search-skills/</guid>
-      <description>当你询问别人一些问题时，别人有可能因为你询问的问题难以轻易讲清而让你自己去 “百度一下”。但是往往 “百度一下” 没能查找到你所询问的问题，这不一</description>
-    </item>
-    
+    <language>zh-cn</language><atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
   </channel>
 </rss>
