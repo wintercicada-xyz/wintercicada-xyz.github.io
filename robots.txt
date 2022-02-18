@@ -1,2 +1,2 @@
 User-agent: *
-Sitemap: http://blog.wintercicada.xyz/sitemap.xml
+Sitemap: https://blog.wintercicada.xyz/sitemap.xml
