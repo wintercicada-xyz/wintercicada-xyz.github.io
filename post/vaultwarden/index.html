@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Vaultwarden（Bitwarden_rs）搭建 - WinterCicada</title>
+  <meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="WinterCicada" /><meta name="description" content="这周在服务器上搭建了 Vaultwarden 服务，从今以后就用 Bitwarden 替代 Keepass 作为密码管理软件了，记录一下过程和踩的坑。 Bitwarden 与 Vaultwarden Bitwarden 是一个开源的跨平台密码管理器，采用 C# 与 Typescript 开" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.80.0 with theme even" />
+
+
+<link rel="canonical" href="https://blog.wintercicada.xyz/post/vaultwarden/" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+<link href="/sass/main.min.b87e76cd589b185c91369316107a6cff8b59e96cf13a7e3b13b57dfb75b68d79.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
+
+
+<meta property="og:title" content="Vaultwarden（Bitwarden_rs）搭建" />
+<meta property="og:description" content="这周在服务器上搭建了 Vaultwarden 服务，从今以后就用 Bitwarden 替代 Keepass 作为密码管理软件了，记录一下过程和踩的坑。 Bitwarden 与 Vaultwarden Bitwarden 是一个开源的跨平台密码管理器，采用 C# 与 Typescript 开" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://blog.wintercicada.xyz/post/vaultwarden/" />
+<meta property="article:published_time" content="2022-03-04T09:41:36+08:00" />
+<meta property="article:modified_time" content="2022-03-04T09:41:36+08:00" />
+<meta itemprop="name" content="Vaultwarden（Bitwarden_rs）搭建">
+<meta itemprop="description" content="这周在服务器上搭建了 Vaultwarden 服务，从今以后就用 Bitwarden 替代 Keepass 作为密码管理软件了，记录一下过程和踩的坑。 Bitwarden 与 Vaultwarden Bitwarden 是一个开源的跨平台密码管理器，采用 C# 与 Typescript 开">
+<meta itemprop="datePublished" content="2022-03-04T09:41:36+08:00" />
+<meta itemprop="dateModified" content="2022-03-04T09:41:36+08:00" />
+<meta itemprop="wordCount" content="1798">
+
+
+
+<meta itemprop="keywords" content="Vaultwarden," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Vaultwarden（Bitwarden_rs）搭建"/>
+<meta name="twitter:description" content="这周在服务器上搭建了 Vaultwarden 服务，从今以后就用 Bitwarden 替代 Keepass 作为密码管理软件了，记录一下过程和踩的坑。 Bitwarden 与 Vaultwarden Bitwarden 是一个开源的跨平台密码管理器，采用 C# 与 Typescript 开"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">WinterCicada</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">首页</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">归档</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签</li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类</li>
+      </a>
+  </ul>
+
+  
+
+
+</nav>
+
+  <div class="container" id="mobile-panel">
+    <header id="header" class="header">
+        <div class="logo-wrapper">
+  <a href="/" class="logo">WinterCicada</a>
+</div>
+
+
+
+
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">首页</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">归档</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">标签</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/categories/">分类</a>
+      </li>
+  </ul>
+</nav>
+
+    </header>
+
+    <main id="main" class="main">
+      <div class="content-wrapper">
+        <div id="content" class="content">
+          <article class="post">
+    
+    <header class="post-header">
+      <h1 class="post-title">Vaultwarden（Bitwarden_rs）搭建</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2022-03-04 </span>
+        
+        
+      </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content always-active">
+    <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#bitwarden-与-vaultwarden">Bitwarden 与 Vaultwarden</a></li>
+        <li><a href="#对比-bitwarden-与-keepass">对比 Bitwarden 与 Keepass</a></li>
+        <li><a href="#vaultwarden-搭建">Vaultwarden 搭建</a>
+          <ul>
+            <li><a href="#软件准备">软件准备</a></li>
+            <li><a href="#安装配置">安装配置</a></li>
+            <li><a href="#使用及踩坑">使用及踩坑</a></li>
+          </ul>
+        </li>
+        <li><a href="#参考">参考</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+  </div>
+</div>
+    <div class="post-content">
+      <p>这周在服务器上搭建了 Vaultwarden 服务，从今以后就用 Bitwarden 替代 Keepass 作为密码管理软件了，记录一下过程和踩的坑。</p>
+<h2 id="bitwarden-与-vaultwarden">Bitwarden 与 Vaultwarden</h2>
+<p>Bitwarden 是一个开源的跨平台密码管理器，采用 C# 与 Typescript 开发，同时支持自建服务器。它的服务器端为 C# 开发并用 Docker 部署。我的服务器性能太弱，运行原版的 Bitwarden 服务器太吃力。但是网上还有一个用 Rust 写的 Bitwarden 叫 Vaultwarden（原名为 bitwarden_rs），相对来说对配置的要求没有这么高。</p>
+<h2 id="对比-bitwarden-与-keepass">对比 Bitwarden 与 Keepass</h2>
+<p>Bitwarden 与 Keepass 可以说是唯有的两个开源且跨平台的密码管理服务了。开源保障密码管理服务的安全性，安全漏洞能被及时发现和处理，也不用担心有后门，而跨平台又保障了便利性，密码可以同步，不需要每个设备单独导入密码。</p>
+<p>Bitwarden 所有客户端拥有一致的功能与界面，而且支持诸如通过桌面端获取指纹来认证浏览器插件的密码访问操作这种联动功能。同时 Bitwarden 把所有密码都同步到服务器端，用官方的服务器可能信不过，那就自己搭一个，这样也兼顾了便利性与安全性。</p>
+<p>Keepass 没有一个统一的组织来开发所有平台的客户端，各个客户端之间界面风格与使用方式都有一定的区别。且 Keepass 设计之初就是没有密码同步机制的，所有文件都放在本地，要同步只能自己配置 Webdav 来实现，完全没有体现出跨平台的便利性优势。</p>
+<h2 id="vaultwarden-搭建">Vaultwarden 搭建</h2>
+<h3 id="软件准备">软件准备</h3>
+<p>Vaultwarden 与 Bitwarden 一样都要用 Docker 部署，所以首先是要安装 Docker，这里就以 Debian 为例。</p>
+<p>卸载旧版 Docker：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-Bash" data-lang="Bash">sudo apt-get remove docker docker-engine docker.io containerd runc
+</code></pre></td></tr></table>
+</div>
+</div><p>安装添加 Docker GPG key 和下载 Docker 所需的软件：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-Bash" data-lang="Bash">sudo apt-get update
+sudo apt-get install <span class="se">\
+</span><span class="se"></span>    ca-certificates <span class="se">\
+</span><span class="se"></span>    curl <span class="se">\
+</span><span class="se"></span>    gnupg <span class="se">\
+</span><span class="se"></span>    lsb-release
+</code></pre></td></tr></table>
+</div>
+</div><p>添加 Docker GPG key：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-Bash" data-lang="Bash">curl -fsSL https://download.docker.com/linux/debian/gpg <span class="p">|</span> sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+</code></pre></td></tr></table>
+</div>
+</div><p>添加 Docker 的源：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-Bash" data-lang="Bash"><span class="nb">echo</span> <span class="se">\
+</span><span class="se"></span>  <span class="s2">&#34;deb [arch=</span><span class="k">$(</span>dpkg --print-architecture<span class="k">)</span><span class="s2"> signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian \
+</span><span class="s2">  </span><span class="k">$(</span>lsb_release -cs<span class="k">)</span><span class="s2"> stable&#34;</span> <span class="p">|</span> sudo tee /etc/apt/sources.list.d/docker.list &gt; /dev/null
+</code></pre></td></tr></table>
+</div>
+</div><p>安装 Docker：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-Bash" data-lang="Bash"> sudo apt-get update
+ sudo apt-get install docker-ce docker-ce-cli containerd.io
+</code></pre></td></tr></table>
+</div>
+</div><p>安装 Docker Compose（便于部署 Vaultwarden）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-Bash" data-lang="Bash"><span class="c1"># 下载 Docker Compose</span>
+ sudo curl -L <span class="s2">&#34;https://github.com/docker/compose/releases/download/1.29.2/docker-compose-</span><span class="k">$(</span>uname -s<span class="k">)</span><span class="s2">-</span><span class="k">$(</span>uname -m<span class="k">)</span><span class="s2">&#34;</span> -o /usr/local/bin/docker-compose 
+ <span class="c1"># 赋予运行权限：</span>
+sudo chmod +x /usr/local/bin/docker-compose
+</code></pre></td></tr></table>
+</div>
+</div><p>安装完 Docker 还要安装 Nginx 用于反代 Vaultwarden 服务并提供 HTTPS 加解密：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-Bash" data-lang="Bash">sudo apt install nginx
+</code></pre></td></tr></table>
+</div>
+</div><p>最后是要在域名服务商处的 DNS 中配置域名指向你当前的服务器公网 ip，并准备你对应域名的证书和私钥到你的服务器上。我这里是使用 acme.sh 签发 Zerossl 证书，这里的方法有许多种，就不详述了。</p>
+<h3 id="安装配置">安装配置</h3>
+<p>先在服务器创建一个叫 docker-compose.yml 的文件，里面内容如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;3&#39;</span><span class="w">
+</span><span class="w"></span><span class="nt">services</span><span class="p">:</span><span class="w">
+</span><span class="w">  </span><span class="nt">vaultwarden</span><span class="p">:</span><span class="w">
+</span><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l">vaultwarden/server:latest</span><span class="w">
+</span><span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l">vaultwarden</span><span class="w">
+</span><span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l">always</span><span class="w">
+</span><span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w">
+</span><span class="w">      </span>- <span class="l">WEBSOCKET_ENABLED=true </span><span class="w"> </span><span class="c"># Enable WebSocket notifications.</span><span class="w">
+</span><span class="w">      </span>- <span class="l">DOMAIN=&lt;YOUR DOMAIN&gt;</span><span class="w">
+</span><span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w">
+</span><span class="w">      </span>- <span class="l">./vw-data:/data</span><span class="w">
+</span><span class="w">    </span><span class="nt">ports</span><span class="p">:</span><span class="w">
+</span><span class="w">     </span>- <span class="s2">&#34;127.0.0.1:80:80&#34;</span><span class="w">
+</span><span class="w">     </span>- <span class="s2">&#34;127.0.0.1:3012:3012&#34;</span><span class="w">
+</span></code></pre></td></tr></table>
+</div>
+</div><p>记得把 <code>&lt;YOUR DOMAIN&gt;</code> 替换为你的证书对应的域名。</p>
+<p>然后配置一下 Nginx， 在 <code>/etc/nginx/conf.d/</code> 目录下创建一个名为 <code>vaultwarden.conf</code> 的文件，内容如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-Nginx" data-lang="Nginx"><span class="k">server</span> <span class="p">{</span>
+  <span class="kn">listen</span> <span class="mi">443</span> <span class="s">ssl</span> <span class="s">http2</span><span class="p">;</span>
+  <span class="kn">server_name</span> <span class="s">&lt;YOUR</span> <span class="s">DOMAIN&gt;</span><span class="p">;</span>
+
+  <span class="kn">ssl_certificate</span>   <span class="s">&lt;YOUR</span> <span class="s">CERTIFICATE&gt;</span><span class="p">;</span>
+  <span class="kn">ssl_certificate_key</span>    <span class="s">&lt;YOUR</span> <span class="s">PRIVATE</span> <span class="s">KEY&gt;</span><span class="p">;</span>
+  <span class="kn">ssl_protocols</span> <span class="s">TLSv1.2</span> <span class="s">TLSv1.3</span><span class="p">;</span>
+  
+  <span class="c1"># Allow large attachments
+</span><span class="c1"></span>  <span class="kn">client_max_body_size</span> <span class="s">128M</span><span class="p">;</span>
+
+  <span class="kn">location</span> <span class="s">/</span> <span class="p">{</span>
+    <span class="kn">proxy_pass</span> <span class="s">http://127.0.0.1:80</span><span class="p">;</span>
+    <span class="kn">proxy_set_header</span> <span class="s">Host</span> <span class="nv">$host</span><span class="p">;</span>
+    <span class="kn">proxy_set_header</span> <span class="s">X-Real-IP</span> <span class="nv">$remote_addr</span><span class="p">;</span>
+    <span class="kn">proxy_set_header</span> <span class="s">X-Forwarded-For</span> <span class="nv">$proxy_add_x_forwarded_for</span><span class="p">;</span>
+    <span class="kn">proxy_set_header</span> <span class="s">X-Forwarded-Proto</span> <span class="nv">$scheme</span><span class="p">;</span>
+  <span class="p">}</span>
+  
+  <span class="kn">location</span> <span class="s">/notifications/hub</span> <span class="p">{</span>
+    <span class="kn">proxy_pass</span> <span class="s">http://127.0.0.1:3012</span><span class="p">;</span>
+    <span class="kn">proxy_set_header</span> <span class="s">Upgrade</span> <span class="nv">$http_upgrade</span><span class="p">;</span>
+    <span class="kn">proxy_set_header</span> <span class="s">Connection</span> <span class="s">&#34;upgrade&#34;</span><span class="p">;</span>
+  <span class="p">}</span>
+  
+  <span class="kn">location</span> <span class="s">/notifications/hub/negotiate</span> <span class="p">{</span>
+    <span class="kn">proxy_pass</span> <span class="s">http://127.0.0.1:80</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>同样是要把 <code>&lt;YOUR DOMAIN&gt;</code> 替换为你的域名，还要把 <code>&lt;YOUR CERTIFICATE&gt;</code> 和 <code>&lt;YOUR PRIVATE KEY&gt;</code> 分别替换为服务器上证书和私钥的路径，后面都是如此替换，就不再提了。</p>
+<p>基本配置完了，开启 Docker 和 Nginx：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-Bash" data-lang="Bash"><span class="c1"># 为 Docker 启用开机自启并开始运行</span>
+sudo systemctl <span class="nb">enable</span> docker
+sudo systemctl start docker
+
+<span class="c1"># 为 Nginx 启用开机自启并开始运行</span>
+sudo systemctl <span class="nb">enable</span> nginx
+sudo systemctl start nginx
+</code></pre></td></tr></table>
+</div>
+</div><p>最后就是运行 Vaultwarden 了，在之前放有 docker-compose.yml 的目录中执行以下代码：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-Bash" data-lang="Bash">sudo docker-compose up -d
+</code></pre></td></tr></table>
+</div>
+</div><p>等到执行完之后，你的 Vaultwarden 服务器就搭建好了，浏览器访问对应域名就可以使用了。</p>
+<h3 id="使用及踩坑">使用及踩坑</h3>
+<p>浏览器访问对应网站的界面如下：
+<img src="/images/login.png" alt="登录界面">
+首先点击右下角按钮注册账号，注意主密码要足够长足够复杂，这一个密码是用来保护你其他所有密码的。</p>
+<p>然后登录进去：
+<img src="/images/vault.png" alt="主界面"></p>
+<p>为了保障安全性，避免被暴力破解主密码，强烈建议在两步验证与 <a href="https://github.com/dani-garcia/vaultwarden/wiki/Fail2Ban-Setup">Fail2Ban</a> 中二选一。
+这里只讲如何开启两步认证，想要开启 Fail2Ban 看上面链接自行配置。在登录进入网页后点击左上的设置然后在右边竖栏中选择两步认证，按你意愿选择合适的两步认证开启即可。
+<img src="/images/2FA.png" alt="两步验证"></p>
+<p>还可以进行其他的配置来提高服务的隐蔽性并防止他人滥用，设置禁止其他用户注册，并关闭网页版的 Bitwarden，只需在 docker-compose.yml 中 <code>- DOMAIN=&lt;YOUR DOMAIN&gt;</code> 后追加以下内容：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="w">      </span>- <span class="l">SIGNUPS_ALLOWED=false  </span><span class="w"> </span><span class="c"># 禁止注册</span><span class="w">
+</span><span class="w">      </span>- <span class="l">WEB_VAULT_ENABLED=false　# 关闭网页版 Bitwarden</span><span class="w">
+</span></code></pre></td></tr></table>
+</div>
+</div><p>注意这里关闭网页版 Bitwarden 后会失去分享加密消息（Send）的功能，因为它通过网页分享的，介意的不要关闭。更改完后重启 Vaultwarden：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-Bash" data-lang="Bash">sudo docker-compose down
+sudo docker-compose up -d
+</code></pre></td></tr></table>
+</div>
+</div><p>之后就要配置客户端了，客户端统一都是在右上角齿轮图标打开后设置自建服务器，就输入 <code>https://&lt;YOUR DOMAIN&gt;</code> 即可，之后用原先注册的账号登录就行。</p>
+<p>但是这在移动端好像行不通，一直都是连接出错，无法登录。这其实是一个坑，移动端无法连接没有配置 <code>OSCP Stapling</code> 的服务器，需要在之前的 <code>/etc/nginx/conf.d/vaultwarden.conf</code> Nginx 配置文件中 <code>ssl_protocols TLSv1.2 TLSv1.3;</code> 后加入以下内容：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-nginx" data-lang="nginx">    <span class="k">ssl_stapling</span> <span class="no">on</span><span class="p">;</span>
+    <span class="k">ssl_stapling_verify</span> <span class="no">on</span><span class="p">;</span>
+    <span class="k">ssl_trusted_certificate</span> <span class="s">&lt;YOUR</span> <span class="s">CERTFICATE&gt;</span><span class="p">;</span>
+
+    <span class="c1"># 以下两行只在国内服务器使用，如果服务器在国外就不需要加入这两行了
+</span><span class="c1"></span>    <span class="k">resolver</span> <span class="mi">8</span><span class="s">.8.8.8</span> <span class="mi">8</span><span class="s">.8.4.4</span> <span class="s">valid=60s</span> <span class="s">ipv6=off</span><span class="p">;</span>
+    <span class="k">resolver_timeout</span> <span class="s">5s</span><span class="p">;</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>之后通过 <code>sudo systemctl restart nginx</code> 重启 Nginx，移动端就可以登录了。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a href="https://docs.docker.com/engine/install/debian/">安装 Docker</a></li>
+<li><a href="https://docs.docker.com/compose/install/">安装 Docker Compose</a></li>
+<li><a href="https://github.com/dani-garcia/vaultwarden/wiki/Using-Docker-Compose">Docker Compose 部署 Vaultwarden</a></li>
+<li><a href="https://github.com/dani-garcia/vaultwarden/wiki/Proxy-examples">Vaultwarden Nginx 配置</a></li>
+<li><a href="https://wangejiba.com/4709.html">OSCP Stapling 配置</a></li>
+</ul>
+
+    </div>
+
+    <div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">WinterCicada</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">
+        2022-03-04
+        
+    </span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc/4.0/deed.zh" target="_blank">CC BY-NC 4.0</a></span>
+  </p>
+</div>
+<footer class="post-footer">
+      <div class="post-tags">
+          <a href="/tags/vaultwarden/">Vaultwarden</a>
+          </div>
+      <nav class="post-nav">
+        
+        <a class="next" href="/post/dp/">
+            <span class="next-text nav-default">动态规划三步走</span>
+            <span class="next-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+        </div>
+        
+
+  
+
+  
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:platypusskull@outlook.com" class="iconfont icon-email" title="email"></a>
+      <a href="https://github.com/wintercicada-xyz" class="iconfont icon-github" title="github"></a>
+  <a href="https://blog.wintercicada.xyz/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    由 <a class="hexo-link" href="https://gohugo.io">Hugo</a> 强力驱动
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    主题 - 
+    <a class="theme-link" href="https://github.com/olOwOlo/hugo-theme-even">Even</a>
+  </span>
+
+  
+
+  <span class="copyright-year">
+    &copy; 
+    2021 - 
+    2022<span class="heart"><i class="iconfont icon-up"></i></span><span>WinterCicada</span>
+  </span>
+</div>
+
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js" integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js" integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.min.js" integrity="sha256-jwCP0NAdCBloaIWTWHmW4i3snUNMHUNO+jr9rYd2iOI=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.locales.min.js" integrity="sha256-ZwofwC1Lf/faQCzN7nZtfijVV6hSwxjQMwXL4gn9qU8=" crossorigin="anonymous"></script>
+  <script><!-- NOTE: timeago.js uses the language code format like "zh_CN" (underscore and case sensitive) -->
+    var languageCode = "zh-cn".replace(/-/g, '_').replace(/_(.*)/, function ($0, $1) {return $0.replace($1, $1.toUpperCase());});
+    timeago().render(document.querySelectorAll('.timeago'), languageCode);
+    timeago.cancel();  
+  </script>
+
+
+
+<script type="text/javascript" src="/js/main.min.c12618f9a600c40bd024996677e951e64d3487006775aeb22e200c990006c5c7.js"></script>
+
+
+
+
+
+
+
+
+</body>
+</html>
