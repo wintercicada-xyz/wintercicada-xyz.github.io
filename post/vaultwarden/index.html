@@ -49,7 +49,7 @@
 <meta itemprop="description" content="这周在服务器上搭建了 Vaultwarden 服务，从今以后就用 Bitwarden 替代 Keepass 作为密码管理软件了，记录一下过程和踩的坑。 Bitwarden 与 Vaultwarden Bitwarden 是一个开源的跨平台密码管理器，采用 C# 与 Typescript 开">
 <meta itemprop="datePublished" content="2022-03-04T09:41:36+08:00" />
 <meta itemprop="dateModified" content="2022-03-04T09:41:36+08:00" />
-<meta itemprop="wordCount" content="1798">
+<meta itemprop="wordCount" content="1810">
 
 
 
@@ -412,7 +412,7 @@ sudo systemctl start nginx
 </span><span class="w">      </span>- <span class="l">WEB_VAULT_ENABLED=false　# 关闭网页版 Bitwarden</span><span class="w">
 </span></code></pre></td></tr></table>
 </div>
-</div><p>注意这里关闭网页版 Bitwarden 后会失去分享加密消息（Send）的功能，因为它通过网页分享的，介意的不要关闭。更改完后重启 Vaultwarden：</p>
+</div><p>这里关闭网页版 Bitwarden 后会并不会失去分享加密消息（Send）的功能，只是没有了网页登录的界面，分享的加密消息页面还是可以打开的。更改完后重启 Vaultwarden：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre class="chroma"><code><span class="lnt">1
