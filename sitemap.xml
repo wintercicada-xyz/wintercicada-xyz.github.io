@@ -2,7 +2,21 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://blog.wintercicada.xyz/categories/</loc>
+    <lastmod>2022-03-20T17:07:09+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
     <loc>https://blog.wintercicada.xyz/post/go-concurrency/</loc>
+    <lastmod>2022-03-20T17:07:09+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.wintercicada.xyz/tags/golang/</loc>
     <lastmod>2022-03-20T17:07:09+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -16,6 +30,13 @@
   </url>
   
   <url>
+    <loc>https://blog.wintercicada.xyz/tags/</loc>
+    <lastmod>2022-03-20T17:07:09+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
     <loc>https://blog.wintercicada.xyz/</loc>
     <lastmod>2022-03-20T17:07:09+08:00</lastmod>
     <changefreq>weekly</changefreq>
@@ -23,8 +44,15 @@
   </url>
   
   <url>
-    <loc>https://blog.wintercicada.xyz/tags/</loc>
-    <lastmod>2022-03-04T09:41:36+08:00</lastmod>
+    <loc>https://blog.wintercicada.xyz/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/</loc>
+    <lastmod>2022-03-20T17:07:09+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.wintercicada.xyz/categories/%E7%BC%96%E7%A8%8B/</loc>
+    <lastmod>2022-03-20T17:07:09+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -53,12 +81,6 @@
   <url>
     <loc>https://blog.wintercicada.xyz/post/dp/</loc>
     <lastmod>2022-01-20T16:53:02+08:00</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.wintercicada.xyz/categories/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>

@@ -13,7 +13,7 @@
       <pubDate>Thu, 20 Jan 2022 16:53:02 +0800</pubDate>
       
       <guid>https://blog.wintercicada.xyz/post/dp/</guid>
-      <description>动态规划一直是算法中比较难的一个，我认为原因有两个：一是动态规划很容易和分治法混淆，二是动态规划的算法比较难以理解，要一步步地优化，最优的动</description>
+      <description>&lt;p&gt;动态规划一直是算法中比较难的一个，我认为原因有两个：一是动态规划很容易和分治法混淆，二是动态规划的算法比较难以理解，要一步步地优化，最优的动态规划算法难以直接构想出来，只有很熟悉才能做到。下面就从动态规划的定义与三个步骤入手，让动态规划更好理解。&lt;/p&gt;</description>
     </item>
     
   </channel>

@@ -13,7 +13,7 @@
       <pubDate>Fri, 04 Mar 2022 09:41:36 +0800</pubDate>
       
       <guid>https://blog.wintercicada.xyz/post/vaultwarden/</guid>
-      <description>这周在服务器上搭建了 Vaultwarden 服务，从今以后就用 Bitwarden 替代 Keepass 作为密码管理软件了，记录一下过程和踩的坑。 Bitwarden 与 Vaultwarden Bitwarden 是一个开源的跨平台密码管理器，采用 C# 与 Typescript 开</description>
+      <description>&lt;p&gt;这周在服务器上搭建了 Vaultwarden 服务，从今以后就用 Bitwarden 替代 Keepass 作为密码管理软件了，记录一下过程和踩的坑。&lt;/p&gt;</description>
     </item>
     
   </channel>
