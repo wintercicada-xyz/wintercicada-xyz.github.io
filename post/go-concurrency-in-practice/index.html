@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Go 并发实战 - WinterCicada&#39;s Blog</title>
+  <meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="WinterCicada" /><meta name="description" content="Go 语言中推荐在使用并发时使用 Channel 通信而不是共享内存方式来实现各个 Goroutine 相互之间的沟通，这使得它的并发编程会不同于大多数用共享内存方式来实现线程间通信的编程语言。下面将会使用一个驱动案例来介绍 Go 的并发编程常用的一些模式。如果你还没有了解过 Go 的并发，可以读一下这篇文章。
+" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.95.0 with theme even" />
+
+
+<link rel="canonical" href="https://blog.wintercicada.xyz/post/go-concurrency-in-practice/" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+<link href="/sass/main.min.b874a8796a492f0d7c86bb24c33cbf052935783a5778ebaf819a8e514bf49f10.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
+
+
+<meta property="og:title" content="Go 并发实战" />
+<meta property="og:description" content="Go 语言中推荐在使用并发时使用 Channel 通信而不是共享内存方式来实现各个 Goroutine 相互之间的沟通，这使得它的并发编程会不同于大多数用共享内存方式来实现线程间通信的编程语言。下面将会使用一个驱动案例来介绍 Go 的并发编程常用的一些模式。如果你还没有了解过 Go 的并发，可以读一下这篇文章。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://blog.wintercicada.xyz/post/go-concurrency-in-practice/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2022-03-22T11:09:00+08:00" />
+<meta property="article:modified_time" content="2022-03-22T11:09:00+08:00" />
+
+<meta itemprop="name" content="Go 并发实战">
+<meta itemprop="description" content="Go 语言中推荐在使用并发时使用 Channel 通信而不是共享内存方式来实现各个 Goroutine 相互之间的沟通，这使得它的并发编程会不同于大多数用共享内存方式来实现线程间通信的编程语言。下面将会使用一个驱动案例来介绍 Go 的并发编程常用的一些模式。如果你还没有了解过 Go 的并发，可以读一下这篇文章。"><meta itemprop="datePublished" content="2022-03-22T11:09:00+08:00" />
+<meta itemprop="dateModified" content="2022-03-22T11:09:00+08:00" />
+<meta itemprop="wordCount" content="2034">
+<meta itemprop="keywords" content="Golang,多线程," /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Go 并发实战"/>
+<meta name="twitter:description" content="Go 语言中推荐在使用并发时使用 Channel 通信而不是共享内存方式来实现各个 Goroutine 相互之间的沟通，这使得它的并发编程会不同于大多数用共享内存方式来实现线程间通信的编程语言。下面将会使用一个驱动案例来介绍 Go 的并发编程常用的一些模式。如果你还没有了解过 Go 的并发，可以读一下这篇文章。"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">WinterCicada&#39;s Blog</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">首页</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">归档</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签</li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类</li>
+      </a>
+  </ul>
+
+  
+
+
+</nav>
+
+  <div class="container" id="mobile-panel">
+    <header id="header" class="header">
+        <div class="logo-wrapper">
+  <a href="/" class="logo">WinterCicada&#39;s Blog</a>
+</div>
+
+
+
+
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">首页</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">归档</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">标签</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/categories/">分类</a>
+      </li>
+  </ul>
+</nav>
+
+    </header>
+
+    <main id="main" class="main">
+      <div class="content-wrapper">
+        <div id="content" class="content">
+          <article class="post">
+    
+    <header class="post-header">
+      <h1 class="post-title">Go 并发实战</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2022-03-22 </span>
+        <div class="post-category">
+            <a href="/categories/%E7%BC%96%E7%A8%8B/"> 编程 </a>
+            </div>
+          <span class="more-meta"> 约 2034 字 </span>
+          <span class="more-meta"> 预计阅读 5 分钟 </span>
+        
+      </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content always-active">
+    <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#工厂-v00">工厂 v0.0</a></li>
+        <li><a href="#工厂-v10">工厂 v1.0</a></li>
+        <li><a href="#工厂-v20">工厂 v2.0</a></li>
+        <li><a href="#工厂-v30">工厂 v3.0</a></li>
+        <li><a href="#总结">总结</a></li>
+        <li><a href="#参考">参考</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+  </div>
+</div>
+    <div class="post-content">
+      <p>Go 语言中推荐在使用并发时使用 Channel 通信而不是共享内存方式来实现各个 Goroutine 相互之间的沟通，这使得它的并发编程会不同于大多数用共享内存方式来实现线程间通信的编程语言。下面将会使用一个驱动案例来介绍 Go 的并发编程常用的一些模式。如果你还没有了解过 Go 的并发，可以读一下<a href="https://blog.wintercicada.xyz/post/go-concurrency/">这篇文章</a>。</p>
+<h2 id="工厂-v00">工厂 v0.0</h2>
+<p>想象一个这样的场景：有一个工厂，里面有若干个工人。工厂不断有订单流入，工人完成这些订单后就把产品运出去。让我们来实现这个场景：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Golang" data-lang="Golang"><span class="line"><span class="cl"><span class="c1">// 产品
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">Product</span> <span class="kd">struct</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 订单
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">Order</span> <span class="kd">struct</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">order</span> <span class="nx">Order</span><span class="p">)</span> <span class="nf">Process</span><span class="p">()</span> <span class="nx">Product</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// 假装处理订单
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nf">Duration</span><span class="p">(</span><span class="nx">rand</span><span class="p">.</span><span class="nf">Intn</span><span class="p">(</span><span class="mi">100</span><span class="p">))</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Millisecond</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">Product</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 工人
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">Worker</span> <span class="kd">struct</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">worker</span> <span class="nx">Worker</span><span class="p">)</span> <span class="nf">Work</span><span class="p">(</span><span class="nx">order</span> <span class="nx">Order</span><span class="p">)</span> <span class="nx">Product</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">order</span><span class="p">.</span><span class="nf">Process</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 工厂
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">Factory</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">workers</span> <span class="p">[]</span><span class="nx">Worker</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>可以看到我们这里是没有订单输入以及产品输出的流程的，我们可以用 Channel 来模拟这两个流程：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Golang" data-lang="Golang"><span class="line"><span class="cl"><span class="c1">// 改动 Factory 结构体
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">Factory</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">orderIn</span>    <span class="o">&lt;-</span><span class="kd">chan</span> <span class="nx">Order</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">productOut</span> <span class="kd">chan</span><span class="o">&lt;-</span> <span class="nx">Product</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">workers</span>    <span class="p">[]</span><span class="nx">Worker</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 初始化订单输入与产品输出的 Channel
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">orderIn</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="nx">Order</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">productOut</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="nx">Product</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">factory</span> <span class="o">:=</span> <span class="nx">Factory</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">orderIn</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">productOut</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="p">[]</span><span class="nx">Worker</span><span class="p">{</span><span class="nx">Worker</span><span class="p">{},</span> <span class="nx">Worker</span><span class="p">{},</span> <span class="nx">Worker</span><span class="p">{}},</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">factory</span><span class="p">.</span><span class="nf">Work</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">select</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>写完后你会发现 <code>factory.Work()</code> 会报错，因为我们还没有实现这个方法。先用串行的方法实现一个初始版本：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Golang" data-lang="Golang"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">factory</span> <span class="nx">Factory</span><span class="p">)</span> <span class="nf">Work</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">order</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">factory</span><span class="p">.</span><span class="nx">orderIn</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">factory</span><span class="p">.</span><span class="nx">productOut</span> <span class="o">&lt;-</span> <span class="nx">factory</span><span class="p">.</span><span class="nx">workers</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nf">Work</span><span class="p">(</span><span class="nx">order</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这个初始版本非常简陋，我们姑且将其称为<em>工厂 v0.0</em>。</p>
+<h2 id="工厂-v10">工厂 v1.0</h2>
+<p>上面的<em>工厂 v0.0</em> 有两个问题：</p>
+<ol>
+<li>必须要前一个订单完成了才会去接下一个订单</li>
+<li>编号为 0 的工人要累死了，自己一个人干，其他的工人都看着他</li>
+</ol>
+<p>那么我们先用并发来解决第一个问题。作为一个自律的工人，怎么能等工厂来分配订单呢？当然是要自己去接订单再自己把成品送出去啦。这样的话就可以解决第一个问题：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Golang" data-lang="Golang"><span class="line"><span class="cl"><span class="c1">// 自律工人的工作方式
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">worker</span> <span class="nx">Worker</span><span class="p">)</span> <span class="nf">Work</span><span class="p">(</span><span class="nx">orderIn</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="nx">Order</span><span class="p">,</span> <span class="nx">productOut</span> <span class="kd">chan</span><span class="o">&lt;-</span> <span class="nx">Product</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 工人是独立工作的，当接到订单后就各自干各的，所以要新开一个 Goroutine
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="nx">order</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">orderIn</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nx">productOut</span> <span class="o">&lt;-</span> <span class="nx">order</span><span class="p">.</span><span class="nf">Process</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}()</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 拥有一个自律工人的先进工厂
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">factory</span> <span class="nx">Factory</span><span class="p">)</span> <span class="nf">Work</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Worker</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nf">Work</span><span class="p">(</span><span class="nx">factory</span><span class="p">.</span><span class="nx">orderIn</span><span class="p">,</span> <span class="nx">factory</span><span class="p">.</span><span class="nx">productOut</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>工厂老板看到了自律工人带来的效率提升，于是乎把所有工人都换成自律工人，再也没有偷懒的工人在一旁看其他人工作了。那么问题二也解决了：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Golang" data-lang="Golang"><span class="line"><span class="cl"><span class="c1">// 拥有许多自律工人的先进工厂
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">factory</span> <span class="nx">Factory</span><span class="p">)</span> <span class="nf">Work</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">worker</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">factory</span><span class="p">.</span><span class="nx">workers</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">worker</span><span class="p">.</span><span class="nf">Work</span><span class="p">(</span><span class="nx">factory</span><span class="p">.</span><span class="nx">orderIn</span><span class="p">,</span> <span class="nx">factory</span><span class="p">.</span><span class="nx">productOut</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>完成了这些改造之后，工厂效率大大提升，可以称之为<em>工厂 v1.0</em>了。</p>
+<h2 id="工厂-v20">工厂 v2.0</h2>
+<p><em>工厂 v1.0</em> 只考虑到了工厂的利益，没有考虑工人的利益。工人相当于和工厂签了卖身契，要一直为这一个工厂工作，不能转工厂，更不能打两个工厂的工。于是工人们决定起义，将获取订单与交付成本的通道掌握在自己的手里：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Golang" data-lang="Golang"><span class="line"><span class="cl"><span class="c1">// 自由工人
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">Worker</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">orderIn</span>    <span class="kd">chan</span> <span class="nx">Order</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">productOut</span> <span class="kd">chan</span> <span class="nx">Product</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">NewWorker</span><span class="p">()</span> <span class="nx">Worker</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">orderIn</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="nx">Order</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">productOut</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="nx">Product</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">for</span> <span class="nx">order</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">orderIn</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">productOut</span> <span class="o">&lt;-</span> <span class="nx">order</span><span class="p">.</span><span class="nf">Process</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">Worker</span><span class="p">{</span><span class="nx">orderIn</span><span class="p">,</span> <span class="nx">productOut</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>工人们转变了，工厂也只有适应他们才能生存。每个工人自己掌控自己的订单接受和成品交付通道，工厂就要想办法将自己的订单分配给工人们，并收集工人们生产的产品。于是工厂也进行了改造，加入了任务分配与成品收集两个功能：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Golang" data-lang="Golang"><span class="line"><span class="cl"><span class="c1">// 工厂
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">Factory</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">orderIn</span>    <span class="o">&lt;-</span><span class="kd">chan</span> <span class="nx">Order</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">productOut</span> <span class="kd">chan</span><span class="o">&lt;-</span> <span class="nx">Product</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">workers</span>    <span class="p">[]</span><span class="nx">Worker</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">factory</span> <span class="nx">Factory</span><span class="p">)</span> <span class="nf">Work</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">worker</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">factory</span><span class="p">.</span><span class="nx">workers</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// 将订单分配给工人
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">go</span> <span class="kd">func</span><span class="p">(</span><span class="nx">orderIn</span> <span class="kd">chan</span><span class="o">&lt;-</span> <span class="nx">Order</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="k">for</span> <span class="nx">order</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">factory</span><span class="p">.</span><span class="nx">orderIn</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">orderIn</span> <span class="o">&lt;-</span> <span class="nx">order</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}(</span><span class="nx">worker</span><span class="p">.</span><span class="nx">orderIn</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="c1">// 收集工人生产的产品
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">go</span> <span class="kd">func</span><span class="p">(</span><span class="nx">productOut</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="nx">Product</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="k">for</span> <span class="nx">product</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">productOut</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">factory</span><span class="p">.</span><span class="nx">productOut</span> <span class="o">&lt;-</span> <span class="nx">product</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}(</span><span class="nx">worker</span><span class="p">.</span><span class="nx">productOut</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>最终工人们争取到了自己的权利，工厂也复工了。这个我们称之为 <em>工厂 v2.0</em>。</p>
+<h2 id="工厂-v30">工厂 v3.0</h2>
+<p>经过了多次改造，工厂也是非常成功，接到了许多订单。但是有一家公司，它给工厂下了大量的订单，却在工厂交付成品之前因经营不善倒闭了。工厂没有遇到过这样的事，没能及时通知工人，工人都把产品生产出来了，但是这些产品没人要，造成了工厂的亏损。于是工厂决定建立一个专门应对上述情况的机制，可以紧急停止生产，避免亏损。</p>
+<p>一开始，工厂领导方想通过新建一个类似于下发订单的渠道（Channel），让工人们能够在接受到这个渠道的消息后停止工作。这个方案执行后工人改动如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Golang" data-lang="Golang"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">NewWorker</span><span class="p">(</span><span class="nx">stop</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{})</span> <span class="nx">Worker</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">orderIn</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="nx">Order</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">productOut</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="nx">Product</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">for</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="k">select</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="k">case</span> <span class="o">&lt;-</span><span class="nx">stop</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">				<span class="k">return</span>
+</span></span><span class="line"><span class="cl">			<span class="k">case</span> <span class="nx">order</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">orderIn</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">productOut</span> <span class="o">&lt;-</span> <span class="nx">order</span><span class="p">.</span><span class="nf">Process</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">Worker</span><span class="p">{</span><span class="nx">orderIn</span><span class="p">,</span> <span class="nx">productOut</span><span class="p">,</span> <span class="nx">stop</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>工厂也加入了紧急停止渠道 <code>stop</code>， 这里的 <code>stop</code> 和下属工人的 <code>stop</code> 是同一个。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Golang" data-lang="Golang"><span class="line"><span class="cl"><span class="c1">// 工厂
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">Factory</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">orderIn</span>    <span class="o">&lt;-</span><span class="kd">chan</span> <span class="nx">Order</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">productOut</span> <span class="kd">chan</span><span class="o">&lt;-</span> <span class="nx">Product</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">stop</span>       <span class="kd">chan</span> <span class="kd">struct</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">workers</span>    <span class="p">[]</span><span class="nx">Worker</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>然后提供工厂的紧急停止执行入口：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Golang" data-lang="Golang"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">factory</span> <span class="nx">Factory</span><span class="p">)</span> <span class="nf">Stop</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">factory</span><span class="p">.</span><span class="nx">stop</span> <span class="o">&lt;-</span> <span class="kd">struct</span><span class="p">{}{}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>但是这里有个问题，我们的渠道的消息只能由一个工人接受，其他的工人就接受不到了。当然我们可以按工人个数发送相应个数的消息，但是工人的数量可能是动态调整的，这样的话就不好管理了。</p>
+<p>这里正确的用法是关闭这个渠道：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Golang" data-lang="Golang"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">factory</span> <span class="nx">Factory</span><span class="p">)</span> <span class="nf">Stop</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nb">close</span><span class="p">(</span><span class="nx">factory</span><span class="p">.</span><span class="nx">stop</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>还记得在之前那篇介绍 Golang 并发的文章中关于关闭 Channel 的描述吗？如果 Channel 被关闭了，对于接受方而言，这就是个固定为 Channel 对应数据类型零值的变量。这样对于所有工人来说，它都是一个立刻可读的变量，不会堵塞，所有工人都能立马接受到停止工作的信号。这就是 <em>工厂 v3.0</em>。</p>
+<h2 id="总结">总结</h2>
+<p>以上各个版本的工厂涉及了许多 Golang 的并发模式，如将并发执行的内容封装为函数，通过 Channel 来输入参数及输出结果；Channel 的一对多，多对一通信；以及通过关闭 Channel 来给并发执行中的任务发送中止信号。各个版本的工厂完整代码可以在<a href="https://github.com/wintercicada-xyz/go-concurrency">我的 Github</a> 上找到。这些代码都是为了方便解释 Golang 的并发模式，没有经过测试。如有错漏，欢迎指出。</p>
+<h2 id="参考">参考</h2>
+<p><a href="https://go.dev/blog/pipelines">Golang 并发模式</a></p>
+    </div>
+
+    <div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">WinterCicada</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">
+        2022-03-22
+        
+    </span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc/4.0/deed.zh" target="_blank">CC BY-NC 4.0</a></span>
+  </p>
+</div>
+<footer class="post-footer">
+      <div class="post-tags">
+          <a href="/tags/golang/">Golang</a>
+          <a href="/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>
+          </div>
+      <nav class="post-nav">
+        
+        <a class="next" href="/post/go-concurrency/">
+            <span class="next-text nav-default">Go 并发</span>
+            <span class="next-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+        </div>
+        
+
+  
+
+  
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:platypusskull@outlook.com" class="iconfont icon-email" title="email"></a>
+      <a href="https://github.com/wintercicada-xyz" class="iconfont icon-github" title="github"></a>
+  <a href="https://blog.wintercicada.xyz/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    由 <a class="hexo-link" href="https://gohugo.io">Hugo</a> 强力驱动
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    主题 - 
+    <a class="theme-link" href="https://github.com/olOwOlo/hugo-theme-even">Even</a>
+  </span>
+
+  
+
+  <span class="copyright-year">
+    &copy; 
+    2021 - 
+    2022<span class="heart"><i class="iconfont icon-up"></i></span><span>WinterCicada</span>
+  </span>
+</div>
+
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js" integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js" integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin="anonymous"></script>
+
+
+
+<script type="text/javascript" src="/js/main.min.64437849d125a2d603b3e71d6de5225d641a32d17168a58106e0b61852079683.js"></script>
+
+
+
+
+
+
+
+
+</body>
+</html>
