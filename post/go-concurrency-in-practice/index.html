@@ -50,7 +50,7 @@
 <meta itemprop="name" content="Go 并发实战">
 <meta itemprop="description" content="Go 语言中推荐在使用并发时使用 Channel 通信而不是共享内存方式来实现各个 Goroutine 相互之间的沟通，这使得它的并发编程会不同于大多数用共享内存方式来实现线程间通信的编程语言。下面将会使用一个驱动案例来介绍 Go 的并发编程常用的一些模式。如果你还没有了解过 Go 的并发，可以读一下这篇文章。"><meta itemprop="datePublished" content="2022-03-22T11:09:00+08:00" />
 <meta itemprop="dateModified" content="2022-03-22T11:09:00+08:00" />
-<meta itemprop="wordCount" content="2067">
+<meta itemprop="wordCount" content="2035">
 <meta itemprop="keywords" content="Golang,多线程," /><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Go 并发实战"/>
 <meta name="twitter:description" content="Go 语言中推荐在使用并发时使用 Channel 通信而不是共享内存方式来实现各个 Goroutine 相互之间的沟通，这使得它的并发编程会不同于大多数用共享内存方式来实现线程间通信的编程语言。下面将会使用一个驱动案例来介绍 Go 的并发编程常用的一些模式。如果你还没有了解过 Go 的并发，可以读一下这篇文章。"/>
@@ -133,7 +133,7 @@
         <div class="post-category">
             <a href="/categories/%E7%BC%96%E7%A8%8B/"> 编程 </a>
             </div>
-          <span class="more-meta"> 约 2067 字 </span>
+          <span class="more-meta"> 约 2035 字 </span>
           <span class="more-meta"> 预计阅读 5 分钟 </span>
         
       </div>
@@ -280,8 +280,8 @@
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div><p>这个初始版本非常简陋，我们姑且将其称为<em>工厂 v0.0</em>。
-<br /></p>
+</div><p>这个初始版本非常简陋，我们姑且将其称为<em>工厂 v0.0</em>。</p>
+<br />
 <h2 id="工厂-v10">工厂 v1.0</h2>
 <p>上面的<em>工厂 v0.0</em> 有两个问题：</p>
 <ol>
@@ -342,8 +342,8 @@
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div><p>完成了这些改造之后，工厂效率大大提升，可以称之为<em>工厂 v1.0</em>了。
-<br /></p>
+</div><p>完成了这些改造之后，工厂效率大大提升，可以称之为<em>工厂 v1.0</em>了。</p>
+<br />
 <h2 id="工厂-v20">工厂 v2.0</h2>
 <p><em>工厂 v1.0</em> 只考虑到了工厂的利益，没有考虑工人的利益。工人相当于和工厂签了卖身契，要一直为这一个工厂工作，不能转工厂，更不能打两个工厂的工。于是工人们决定起义，将获取订单与交付成本的通道掌握在自己的手里：</p>
 <div class="highlight"><div class="chroma">
@@ -439,8 +439,8 @@
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div><p>最终工人们争取到了自己的权利，工厂也复工了。这个我们称之为 <em>工厂 v2.0</em>。
-<br /></p>
+</div><p>最终工人们争取到了自己的权利，工厂也复工了。这个我们称之为 <em>工厂 v2.0</em>。</p>
+<br />
 <h2 id="工厂-v30">工厂 v3.0</h2>
 <p>经过了多次改造，工厂也是非常成功，接到了许多订单。但是有一家公司，它给工厂下了大量的订单，却在工厂交付成品之前因经营不善倒闭了。工厂没有遇到过这样的事，没能及时通知工人，工人都把产品生产出来了，但是这些产品没人要，造成了工厂的亏损。于是工厂决定建立一个专门应对上述情况的机制，可以紧急停止生产，避免亏损。</p>
 <p>一开始，工厂领导方想通过新建一个类似于下发订单的渠道（Channel），让工人们能够在接受到这个渠道的消息后停止工作。这个方案执行后工人改动如下：</p>
@@ -528,13 +528,13 @@
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div><p>还记得在之前那篇介绍 Golang 并发的文章中关于关闭 Channel 的描述吗？如果 Channel 被关闭了，对于接受方而言，这就是个固定为 Channel 对应数据类型零值的变量。这样对于所有工人来说，它都是一个立刻可读的变量，不会堵塞，所有工人都能立马接受到停止工作的信号。这就是 <em>工厂 v3.0</em>。
-<br /></p>
+</div><p>还记得在之前那篇介绍 Golang 并发的文章中关于关闭 Channel 的描述吗？如果 Channel 被关闭了，对于接受方而言，这就是个固定为 Channel 对应数据类型零值的变量。这样对于所有工人来说，它都是一个立刻可读的变量，不会堵塞，所有工人都能立马接受到停止工作的信号。这就是 <em>工厂 v3.0</em>。</p>
+<br />
 <h2 id="总结">总结</h2>
 <p>以上各个版本的工厂涉及了许多 Golang 的并发模式，如将并发执行的内容封装为函数，通过 Channel 来输入参数及输出结果；Channel 的一对多，多对一通信；以及通过关闭 Channel 来给并发执行中的任务发送中止信号。各个版本的工厂完整代码可以在<a href="https://github.com/wintercicada-xyz/go-concurrency">我的 Github</a> 上找到。这些代码都是为了方便解释 Golang 的并发模式，没有经过测试。如有错漏，欢迎指出。</p>
 <br />
 ## 参考
-[Golang 并发模式](https://go.dev/blog/pipelines)
+<p><a href="https://go.dev/blog/pipelines">Golang 并发模式</a></p>
     </div>
 
     <div class="post-copyright">
