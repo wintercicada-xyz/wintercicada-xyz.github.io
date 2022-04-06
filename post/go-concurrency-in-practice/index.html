@@ -50,7 +50,7 @@
 <meta itemprop="name" content="Go 并发实战">
 <meta itemprop="description" content="Go 语言中推荐在使用并发时使用 Channel 通信而不是共享内存方式来实现各个 Goroutine 相互之间的沟通，这使得它的并发编程会不同于大多数用共享内存方式来实现线程间通信的编程语言。下面将会使用一个驱动案例来介绍 Go 的并发编程常用的一些模式。如果你还没有了解过 Go 的并发，可以读一下这篇文章。"><meta itemprop="datePublished" content="2022-03-22T11:09:00+08:00" />
 <meta itemprop="dateModified" content="2022-03-22T11:09:00+08:00" />
-<meta itemprop="wordCount" content="2035">
+<meta itemprop="wordCount" content="2034">
 <meta itemprop="keywords" content="Golang,多线程," /><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Go 并发实战"/>
 <meta name="twitter:description" content="Go 语言中推荐在使用并发时使用 Channel 通信而不是共享内存方式来实现各个 Goroutine 相互之间的沟通，这使得它的并发编程会不同于大多数用共享内存方式来实现线程间通信的编程语言。下面将会使用一个驱动案例来介绍 Go 的并发编程常用的一些模式。如果你还没有了解过 Go 的并发，可以读一下这篇文章。"/>
@@ -133,7 +133,7 @@
         <div class="post-category">
             <a href="/categories/%E7%BC%96%E7%A8%8B/"> 编程 </a>
             </div>
-          <span class="more-meta"> 约 2035 字 </span>
+          <span class="more-meta"> 约 2034 字 </span>
           <span class="more-meta"> 预计阅读 5 分钟 </span>
         
       </div>
@@ -151,6 +151,7 @@
         <li><a href="#工厂-v20">工厂 v2.0</a></li>
         <li><a href="#工厂-v30">工厂 v3.0</a></li>
         <li><a href="#总结">总结</a></li>
+        <li><a href="#参考">参考</a></li>
       </ul>
     </li>
   </ul>
@@ -533,7 +534,7 @@
 <h2 id="总结">总结</h2>
 <p>以上各个版本的工厂涉及了许多 Golang 的并发模式，如将并发执行的内容封装为函数，通过 Channel 来输入参数及输出结果；Channel 的一对多，多对一通信；以及通过关闭 Channel 来给并发执行中的任务发送中止信号。各个版本的工厂完整代码可以在<a href="https://github.com/wintercicada-xyz/go-concurrency">我的 Github</a> 上找到。这些代码都是为了方便解释 Golang 的并发模式，没有经过测试。如有错漏，欢迎指出。</p>
 <br />
-## 参考
+<h2 id="参考">参考</h2>
 <p><a href="https://go.dev/blog/pipelines">Golang 并发模式</a></p>
     </div>
 
